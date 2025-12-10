@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -196,6 +195,25 @@
       color: var(--text-soft);
       margin-bottom: 8px;
     }
+
+    .client-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 16px 0;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.client-actions-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.client-actions-right {
+  margin-left: auto;
+}
 
     /* Sections padel / foot (BAS) */
     .section-row {
@@ -1054,17 +1072,28 @@
 
     <div class="client-extra" id="clientExtra"></div>
 
-    <div style="margin:8px 0 16px 0;">
-      <button class="btn btn-light btn-icon" onclick="openQrClientModal()">
-        📱 QR Code client
-      </button>
-      <button class="btn btn-light btn-icon" onclick="openFidelityModal()">
-        🎫 Carte fidélité padel
-      </button>
-      <button class="btn btn-light btn-icon" onclick="openFootFidelityModal()">
-        🥅 Carte fidélité foot
-      </button>
-    </div>
+    <div class="client-extra" id="clientExtra"></div>
+
+<div class="client-actions-row">
+  <div class="client-actions-left">
+    <button class="btn btn-light btn-icon" onclick="openQrClientModal()">
+      📱 QR Code client
+    </button>
+    <button class="btn btn-light btn-icon" onclick="openFidelityModal()">
+      🎫 Carte fidélité padel
+    </button>
+    <button class="btn btn-light btn-icon" onclick="openFootFidelityModal()">
+      🥅 Carte fidélité foot
+    </button>
+  </div>
+
+  <div class="client-actions-right">
+    <button class="btn btn-secondary btn-icon" onclick="openEditClientModal()">
+      ✏️ Modifier
+    </button>
+  </div>
+</div>
+
 
     <!-- PADEL -->
     <div class="section-row">
@@ -1395,6 +1424,32 @@
     <div class="modal-actions">
       <button class="btn btn-light" onclick="closeFootFidelityModal()">Fermer</button>
       <button class="btn btn-primary" onclick="sendQrByEmail()">✉️ Envoyer par mail</button>
+    </div>
+  </div>
+</div>
+
+  <!-- MODALE MODIFIER CLIENT -->
+<div class="modal-backdrop" id="editClientModal">
+  <div class="modal" style="max-width:420px;">
+    <h2>Modifier le client</h2>
+    <div class="modal-body">
+      <label>Nom</label>
+      <input id="editName" class="input" type="text" />
+
+      <label>Téléphone</label>
+      <input id="editPhone" class="input" type="text" />
+
+      <label>Email</label>
+      <input id="editEmail" class="input" type="text" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-light" type="button" onclick="closeEditClientModal()">
+        Annuler
+      </button>
+      <button class="btn btn-primary" type="button" onclick="saveClientEdits()">
+        Enregistrer
+      </button>
     </div>
   </div>
 </div>
@@ -2954,6 +3009,91 @@ function openClientCreateModal(initialValue) {
     if (modal) modal.classList.remove("open");
     if (container) container.innerHTML = "";
   }
+  
+    // === MODALE MODIFIER CLIENT ===
+  function openEditClientModal() {
+    if (!currentClientId || !clients[currentClientId]) {
+      alert("Ouvre d'abord une fiche client.");
+      return;
+    }
+
+    var c = clients[currentClientId];
+
+    document.getElementById("editName").value  = c.name  || "";
+    document.getElementById("editPhone").value = c.phone || "";
+    document.getElementById("editEmail").value = c.email || "";
+
+    var modal = document.getElementById("editClientModal");
+    if (modal) modal.classList.add("open");
+  }
+
+  function closeEditClientModal() {
+    var modal = document.getElementById("editClientModal");
+    if (modal) modal.classList.remove("open");
+  }
+
+  function saveClientEdits() {
+    if (!currentClientId || !clients[currentClientId]) return;
+
+    var name  = document.getElementById("editName").value.trim();
+    var phone = document.getElementById("editPhone").value.trim();
+    var email = document.getElementById("editEmail").value.trim();
+
+    if (!phone) {
+      alert("Le téléphone est obligatoire.");
+      return;
+    }
+
+    // on nettoie un peu le téléphone (enlève les espaces)
+    phone = phone.replace(/\s+/g, "");
+
+    var oldId = currentClientId;
+    var c = clients[oldId];
+    if (!c) return;
+
+    // si on change le téléphone et qu'un autre client existe déjà
+    if (phone !== oldId && clients[phone] && clients[phone] !== c) {
+      var overwrite = window.confirm(
+        "Un client existe déjà avec ce téléphone.\n" +
+        "Remplacer ses informations par celles-ci ?"
+      );
+      if (!overwrite) return;
+    }
+
+    // mise à jour des champs
+    c.name  = name;
+    c.email = email;
+    c.phone = phone;
+
+    // si la clé change, on déplace l'entrée dans le dictionnaire
+    if (phone !== oldId) {
+      delete clients[oldId];
+      clients[phone] = c;
+      currentClientId = phone;
+      var input = document.getElementById("clientIdInput");
+      if (input) input.value = phone;
+    }
+
+    // flag dirty + sync Apps Script
+    markClientDirty(c);
+
+    // on rafraîchit toute la fiche
+    closeEditClientModal();
+    openClientCard();
+
+    alert("Client mis à jour.");
+  }
+
+  function closeFootFidelityModal() {
+  const modal = document.getElementById("footFidelityModal");
+  const container = document.getElementById("footFidelityCardContainer");
+  if (modal) modal.classList.remove("open");
+  if (container) container.innerHTML = "";
+}
+
+
+// === QR CODE CLIENT & SCAN ===
+var qrClientInstance = null;
 
 
   // === QR CODE CLIENT & SCAN ===
