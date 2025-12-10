@@ -2997,6 +2997,53 @@ function openClientCreateModal(initialValue) {
     var txt = document.getElementById("qrClientText");
     if (!modal || !container) return;
 
+  function openEditClientModal() {
+    if (!window.CURRENT_CLIENT) return;
+
+    document.getElementById("editName").value  = CURRENT_CLIENT.name  || "";
+    document.getElementById("editPhone").value = CURRENT_CLIENT.phone || "";
+    document.getElementById("editEmail").value = CURRENT_CLIENT.email || "";
+
+    document.getElementById("editClientModal").style.display = "flex";
+  }
+
+  function closeClientEditModal() {
+    document.getElementById("editClientModal").style.display = "none";
+  }
+
+  async function saveClientEdits() {
+    const name  = document.getElementById("editName").value.trim();
+    const phone = document.getElementById("editPhone").value.trim();
+    const email = document.getElementById("editEmail").value.trim();
+
+    if (!phone) {
+      alert("Le téléphone est obligatoire.");
+      return;
+    }
+
+    const updated = {
+      ...CURRENT_CLIENT,
+      name,
+      phone,
+      email,
+      updatedAt: Date.now()
+    };
+
+    const res = await apiPost({ action: "upsertClient", client: updated });
+
+    if (!res.ok) {
+      alert("Erreur : " + res.error);
+      return;
+    }
+
+    closeClientEditModal();
+    await refreshClientData(phone); // ta fonction de reload client
+    alert("Client mis à jour !");
+  }
+
+  // ... reste de ton JS ...
+</script>
+
     // Nettoyage
     container.innerHTML = "";
     var value = getCurrentClientQrValue();
