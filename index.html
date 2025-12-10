@@ -2873,26 +2873,67 @@ function openClientCreateModal(initialValue) {
     container.innerHTML = buildFidelityCardHtmlFromClient(clients[currentClientId]);
   }
 
-  function openFidelityModal() {
-    if (!currentClientId || !clients[currentClientId]) {
-      alert("Ouvre d'abord une fiche client.");
-      return;
-    }
-    const modal = document.getElementById("fidelityModal");
-    const container = document.getElementById("fidelityCardContainer");
-    if (!modal || !container) return;
+  function getCurrentClient() {
+  if (!window.clients || !window.currentClientId) return null;
+  return window.clients[window.currentClientId] || null;
+}
 
-    container.innerHTML = buildFidelityCardHtmlFromClient(clients[currentClientId]);
-    modal.classList.add("open");
+function openEditClientModal() {
+  const client = getCurrentClient();
+  if (!client) {
+    alert("Ouvre d'abord une fiche client.");
+    return;
   }
 
-  function closeFidelityModal() {
-    const modal = document.getElementById("fidelityModal");
-    const container = document.getElementById("fidelityCardContainer");
-    if (modal) modal.classList.remove("open");
-    if (container) container.innerHTML = "";
+  document.getElementById("editName").value  = client.name  || "";
+  document.getElementById("editPhone").value = client.phone || "";
+  document.getElementById("editEmail").value = client.email || "";
+
+  document.getElementById("editClientModal").style.display = "flex";
+}
+
+function closeClientEditModal() {
+  document.getElementById("editClientModal").style.display = "none";
+}
+
+async function saveClientEdits() {
+  const client = getCurrentClient();
+  if (!client) {
+    alert("Aucun client chargé.");
+    return;
   }
 
+  const name  = document.getElementById("editName").value.trim();
+  const phone = document.getElementById("editPhone").value.trim();
+  const email = document.getElementById("editEmail").value.trim();
+
+  if (!phone) {
+    alert("Le téléphone est obligatoire.");
+    return;
+  }
+
+  // On part de l'objet existant et on met à jour uniquement les champs d'identité
+  const updated = {
+    ...client,
+    name,
+    phone,
+    email,
+    updatedAt: Date.now()
+  };
+
+  const res = await apiPost({ action: "upsertClient", client: updated });
+
+  if (!res.ok) {
+    alert("Erreur : " + res.error);
+    return;
+  }
+
+  // On met aussi à jour la version locale
+  clients[currentClientId] = updated;
+
+  closeClientEditModal();
+  alert("Client mis à jour !");
+}
 
   // === CARTE FIDÉLITÉ FOOT ===
   const FOOT_FID_MAX_SLOTS = 10;   // 10 matchs = 1 offert
