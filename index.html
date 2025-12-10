@@ -197,6 +197,47 @@
       margin-bottom: 8px;
     }
 
+  /* Apparence de la modale */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:1000;
+  }
+  .modal-backdrop.open {
+    display:flex;
+  }
+  .modal {
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    width:90%;
+    max-width:420px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.2);
+  }
+  .modal-body label {
+    display:block;
+    margin-top:10px;
+    font-size:14px;
+    color:#333;
+  }
+  .modal-body .input {
+    width:100%;
+    padding:8px;
+    margin-top:4px;
+    border:1px solid #ccc;
+    border-radius:6px;
+  }
+  .modal-actions {
+    display:flex;
+    justify-content:flex-end;
+    margin-top:20px;
+    gap:10px;
+  }
+    
     /* Sections padel / foot (BAS) */
     .section-row {
       display: grid;
@@ -1054,17 +1095,43 @@
 
     <div class="client-extra" id="clientExtra"></div>
 
-    <div style="margin:8px 0 16px 0;">
-      <button class="btn btn-light btn-icon" onclick="openQrClientModal()">
-        📱 QR Code client
-      </button>
-      <button class="btn btn-light btn-icon" onclick="openFidelityModal()">
-        🎫 Carte fidélité padel
-      </button>
-      <button class="btn btn-light btn-icon" onclick="openFootFidelityModal()">
-        🥅 Carte fidélité foot
-      </button>
+    <div style="margin:8px 0 16px 0; display:flex; align-items:center; gap:8px;">
+  <button class="btn btn-primary" onclick="openQrModal()">📱 QR Code Client</button>
+  <button class="btn btn-primary" onclick="openPadelFidCard()">🎾 Fidélité Padel</button>
+  <button class="btn btn-primary" onclick="openFootFidCard()">⚽ Fidélité Foot</button>
+
+  <!-- espace qui pousse à droite -->
+  <div style="flex:1"></div>
+
+  <!-- NOUVEAU BOUTON MODIFIER -->
+  <button class="btn btn-secondary btn-icon" onclick="openEditClientModal()">
+    ✏️ Modifier
+  </button>
+</div>
+    <!-- === MODALE MODIFIER CLIENT === -->
+<div class="modal-backdrop" id="editClientModal">
+  <div class="modal" style="max-width:420px;">
+    <h2>Modifier le client</h2>
+
+    <div class="modal-body">
+
+      <label>Nom</label>
+      <input id="editName" class="input" type="text">
+
+      <label>Téléphone</label>
+      <input id="editPhone" class="input" type="text">
+
+      <label>Email</label>
+      <input id="editEmail" class="input" type="text">
+
     </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-light" onclick="closeEditClientModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveClientEdits()">Enregistrer</button>
+    </div>
+  </div>
+</div>
 
     <!-- PADEL -->
     <div class="section-row">
