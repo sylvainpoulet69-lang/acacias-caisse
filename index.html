@@ -1074,18 +1074,17 @@
 
     <div class="client-extra" id="clientExtra"></div>
 
-<div class="client-actions-row">
-  <div class="client-actions-left">
-    <button class="btn btn-light btn-icon" onclick="openQrClientModal()">
-      📱 QR Code client
-    </button>
-    <button class="btn btn-light btn-icon" onclick="openFidelityModal()">
-      🎫 Carte fidélité padel
-    </button>
-    <button class="btn btn-light btn-icon" onclick="openFootFidelityModal()">
-      🥅 Carte fidélité foot
-    </button>
-  </div>
+    <div style="margin:8px 0 16px 0; display:flex; gap:8px; align-items:center;">
+  <button class="btn btn-primary" onclick="openQrModal()">📱 QR Code Client</button>
+  <button class="btn btn-primary" onclick="openPadelFidCard()">🎾 Fidélité Padel</button>
+  <button class="btn btn-primary" onclick="openFootFidCard()">⚽ Fidélité Foot</button>
+
+  <!-- ICI TON BOUTON MODIFIER -->
+  <div style="flex:1"></div> <!-- pousse vers la droite -->
+  <button class="btn btn-secondary btn-icon" onclick="openEditClientModal()">
+    ✏️ Modifier
+  </button>
+</div>
 
   <div class="client-actions-right">
     <button class="btn btn-secondary btn-icon" onclick="openEditClientModal()">
