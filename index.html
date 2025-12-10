@@ -1344,6 +1344,23 @@
   </div>
 </div>
 
+<!-- MODALE MODIFICATION CLIENT -->
+<div class="modal-backdrop" id="clientEditModal">
+  <div class="modal">
+    <h2>Modifier le client</h2>
+    <div class="modal-body">
+      <input id="editClientName" class="input" placeholder="Nom / Prénom" />
+      <input id="editClientPhone" class="input" placeholder="Téléphone (obligatoire)" />
+      <input id="editClientEmail" class="input" placeholder="E-mail (obligatoire)" />
+      <small>Le téléphone et l’e-mail servent à retrouver le compte côté staff.</small>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-light" onclick="closeClientEditModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveClientEditFromModal()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALE CONFIRMATION -->
 <div class="modal-backdrop" id="confirmModal">
   <div class="modal">
@@ -1844,6 +1861,93 @@ function openClientCreateModal(initialValue) {
     document.getElementById("clientIdInput").value = phone;
     log("Nouveau client créé : " + getClientLabel(clients[phone]), "NEW");
     openClientCard();
+  }
+
+    function openClientEditModal() {
+    if (!requireClient()) return;
+    if (!currentClientId || !clients[currentClientId]) return;
+
+    var c = clients[currentClientId];
+    var modal = document.getElementById("clientEditModal");
+    if (!modal) return;
+
+    var nameInput  = document.getElementById("editClientName");
+    var phoneInput = document.getElementById("editClientPhone");
+    var emailInput = document.getElementById("editClientEmail");
+
+    nameInput.value  = c.name  || "";
+    phoneInput.value = c.phone || "";
+    emailInput.value = c.email || "";
+
+    modal.classList.add("open");
+
+    setTimeout(function() {
+      if (nameInput) nameInput.focus();
+    }, 10);
+  }
+
+  function closeClientEditModal() {
+    var modal = document.getElementById("clientEditModal");
+    if (modal) modal.classList.remove("open");
+  }
+
+  function saveClientEditFromModal() {
+    if (!requireClient()) return;
+    if (!currentClientId || !clients[currentClientId]) return;
+
+    var oldPhone = currentClientId;
+    var c = clients[oldPhone];
+    if (!c) return;
+
+    var name  = document.getElementById("editClientName").value.trim();
+    var phone = document.getElementById("editClientPhone").value.trim();
+    var email = document.getElementById("editClientEmail").value.trim();
+
+    if (!phone) {
+      alert("Le téléphone est obligatoire.");
+      return;
+    }
+    if (!email) {
+      alert("L’e-mail est obligatoire.");
+      return;
+    }
+
+    // Si on change le téléphone, vérifier que le nouveau n'est pas déjà pris
+    if (phone !== oldPhone && clients[phone]) {
+      alert("Un autre client utilise déjà ce téléphone.");
+      return;
+    }
+
+    // On part de l'objet existant pour garder wallet / heures / foot etc.
+    var updated = Object.assign({}, c, {
+      name:  name,
+      phone: phone,
+      email: email
+    });
+
+    // Si le téléphone change, on déplace la clé dans l'objet clients
+    if (phone !== oldPhone) {
+      delete clients[oldPhone];
+      clients[phone] = updated;
+      currentClientId = phone;
+
+      var input = document.getElementById("clientIdInput");
+      if (input) input.value = phone;
+    } else {
+      clients[oldPhone] = updated;
+    }
+
+    // Marque comme à synchroniser vers le backend
+    markClientDirty(updated);
+
+    closeClientEditModal();
+    document.getElementById("newBadge").style.display = "none";
+    openClientCard();
+    log("Fiche client modifiée : " + getClientLabel(updated), "CLIENT");
+
+    // ⚠️ Note : si tu changes le téléphone, le backend créera une nouvelle ligne
+    // dans le Sheet pour le nouveau numéro, l’ancienne ligne restera.
+    // Tu pourras éventuellement nettoyer les anciennes lignes à la main.
   }
 
   function openClientCard() {
