@@ -3056,8 +3056,7 @@ function openClientCreateModal(initialValue) {
     await refreshClientData(phone); // ta fonction de reload client
     alert("Client mis à jour !");
   }
-
-  // ... reste de ton JS ...
+    
 </script>
 
     // Nettoyage
@@ -3466,25 +3465,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
-<!-- MODALE MODIFIER CLIENT -->
-<div class="modal-backdrop" id="editClientModal" style="display:none;">
-  <div class="modal" style="max-width:420px;">
-    <h2>Modifier le client</h2>
-    <div class="modal-body">
-      <label>Nom</label>
-      <input id="editName" class="input" type="text">
 
-      <label>Téléphone</label>
-      <input id="editPhone" class="input" type="text">
-
-      <label>Email</label>
-      <input id="editEmail" class="input" type="text">
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn btn-light" onclick="closeClientEditModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveClientEdits()">Enregistrer</button>
-    </div>
   </div>
 </div>
 </script>
