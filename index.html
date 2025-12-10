@@ -2878,31 +2878,6 @@ function openClientCreateModal(initialValue) {
   return window.clients[window.currentClientId] || null;
 }
 
-function openEditClientModal() {
-  const client = getCurrentClient();
-  if (!client) {
-    alert("Ouvre d'abord une fiche client.");
-    return;
-  }
-
-  document.getElementById("editName").value  = client.name  || "";
-  document.getElementById("editPhone").value = client.phone || "";
-  document.getElementById("editEmail").value = client.email || "";
-
-  document.getElementById("editClientModal").style.display = "flex";
-}
-
-function closeClientEditModal() {
-  document.getElementById("editClientModal").style.display = "none";
-}
-
-async function saveClientEdits() {
-  const client = getCurrentClient();
-  if (!client) {
-    alert("Aucun client chargé.");
-    return;
-  }
-
   const name  = document.getElementById("editName").value.trim();
   const phone = document.getElementById("editPhone").value.trim();
   const email = document.getElementById("editEmail").value.trim();
