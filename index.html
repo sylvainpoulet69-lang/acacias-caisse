@@ -1444,7 +1444,7 @@
 
 // === BACKEND GOOGLE APPS SCRIPT ===
 // 👉 On utilise DIRECTEMENT l'URL /exec de l'App Script
-const BACKEND_URL = "https://script.google.com/macros/s/AKfycbyQzvUaZZsZUCrYyEqbU9WfMZu8fuUQ-rfWjuoxzdpIs1cXTA5mZUWfWNOj9fM8XIvWZQ/exec";
+const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzr-ynl87wC-_ZBxtt3UZNNsSKn6b9wy8GT2iRkGXdphyKlB6GGNr1Qdg3i_KM4lqYh2g/exec";
 const LEGACY_BACKEND_URL = ""; // on s'en fiche maintenant
 
 function getBackendBase() {
@@ -1891,7 +1891,7 @@ function openClientCreateModal(initialValue) {
     if (modal) modal.classList.remove("open");
   }
 
-  function saveClientEditFromModal() {
+    function saveClientEditFromModal() {
     if (!requireClient()) return;
     if (!currentClientId || !clients[currentClientId]) return;
 
@@ -1925,8 +1925,9 @@ function openClientCreateModal(initialValue) {
       email: email
     });
 
-    // Si le téléphone change, on déplace la clé dans l'objet clients
+    // Si le téléphone change, on garde oldPhone dans l'objet pour le backend
     if (phone !== oldPhone) {
+      updated._oldPhone = oldPhone;   // <<< très important
       delete clients[oldPhone];
       clients[phone] = updated;
       currentClientId = phone;
@@ -1934,6 +1935,7 @@ function openClientCreateModal(initialValue) {
       var input = document.getElementById("clientIdInput");
       if (input) input.value = phone;
     } else {
+      // Téléphone identique : on écrase juste les infos
       clients[oldPhone] = updated;
     }
 
@@ -1944,10 +1946,6 @@ function openClientCreateModal(initialValue) {
     document.getElementById("newBadge").style.display = "none";
     openClientCard();
     log("Fiche client modifiée : " + getClientLabel(updated), "CLIENT");
-
-    // ⚠️ Note : si tu changes le téléphone, le backend créera une nouvelle ligne
-    // dans le Sheet pour le nouveau numéro, l’ancienne ligne restera.
-    // Tu pourras éventuellement nettoyer les anciennes lignes à la main.
   }
 
   function openClientCard() {
@@ -2622,48 +2620,61 @@ function openClientCreateModal(initialValue) {
 
   // Envoi d'un client vers le backend (Apps Script)
   function syncClientToBackend(c) {
-    // Version "promise" : on retourne toujours une Promise
-    // pour pouvoir enchaîner proprement toutes les synchros,
-    // et ne rafraîchir la base qu'une fois que tout est bien écrit.
-    var backendBase = getBackendBase();
-    if (!backendBase) return Promise.resolve();
-    if (!c || !c.phone) return Promise.resolve();
+  // Version "promise" : on retourne toujours une Promise
+  // pour pouvoir enchaîner proprement toutes les synchros,
+  // et ne rafraîchir la base qu'une fois que tout est bien écrit.
+  var backendBase = getBackendBase();
+  if (!backendBase) return Promise.resolve();
+  if (!c || !c.phone) return Promise.resolve();
 
-    var payload = {
-      action: "upsertClient",
-      client: {
-        phone: c.phone,
-        name: c.name || "",
-        email: c.email || "",
-        wallet: Number(c.wallet || 0),
-        padelHours: Number(c.padelHours || 0),
-        padelFreeHours: Number(c.padelFreeHours || 0),
-        footMatches: Number(c.footMatches || 0),
-        footFree: Number(c.footFree || 0),
-        updatedAt: Number(c.updatedAt || Date.now())
-      }
-    };
+  var payload = {
+    action: "upsertClient",
+    client: {
+      phone: c.phone,
+      name: c.name || "",
+      email: c.email || "",
+      wallet: Number(c.wallet || 0),
+      padelHours: Number(c.padelHours || 0),
+      padelFreeHours: Number(c.padelFreeHours || 0),
+      footMatches: Number(c.footMatches || 0),
+      footFree: Number(c.footFree || 0),
+      updatedAt: Number(c.updatedAt || Date.now())
+    }
+  };
 
-    return fetch(backendBase, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(payload)
-    })
-      .then(function(res) { return res.json(); })
-      .then(function(json) {
-        if (!json || !json.ok) {
-          console.warn("Erreur sync backend:", json && json.error);
-          return;
-        }
-        if (clients[c.phone]) {
-          clients[c.phone].dirty = false;
-          saveClients();
-        }
-      })
-      .catch(function(err) {
-        console.warn("Erreur réseau sync backend:", err);
-      });
+  // Si on a un ancien téléphone (changement de numéro), on l'envoie aussi
+  if (c._oldPhone && c._oldPhone !== c.phone) {
+    payload.oldPhone = c._oldPhone;
   }
+
+  return fetch(backendBase, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(payload)
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(json) {
+      if (!json || !json.ok) {
+        console.warn("Erreur sync backend:", json && json.error);
+        return;
+      }
+
+      if (clients[c.phone]) {
+        clients[c.phone].dirty = false;
+
+        // Nettoyage du flag technique après synchro OK
+        // (évite de renvoyer oldPhone inutilement plus tard)
+        if (clients[c.phone]._oldPhone) {
+          delete clients[c.phone]._oldPhone;
+        }
+
+        saveClients();
+      }
+    })
+    .catch(function(err) {
+      console.warn("Erreur réseau sync backend:", err);
+    });
+}
 
   // Synchronise tous les clients "dirty", puis appelle callback quand c'est fini
   function syncAllDirtyClients(callback) {
