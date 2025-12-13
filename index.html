@@ -1064,6 +1064,10 @@
       <button class="btn btn-light btn-icon" onclick="openFootFidelityModal()">
         🥅 Carte fidélité foot
       </button>
+      <button class="btn btn-light btn-icon" onclick="rollbackLastAction()">
+      ↩ Annuler
+      </button>
+
       <button class="btn btn-light btn-icon" onclick="openClientEditModal()" style="float:right;">
         ✏️ Modifier la fiche
       </button>
@@ -1947,6 +1951,57 @@ function openClientCreateModal(initialValue) {
     openClientCard();
     log("Fiche client modifiée : " + getClientLabel(updated), "CLIENT");
   }
+  async function rollbackLastAction() {
+  if (!requireClient()) return;
+
+  var phone = currentClientId;
+  if (!phone) return;
+
+  if (!confirm("Annuler la dernière action fidélité / wallet pour ce client ?")) return;
+
+  try {
+    var backendBase = getBackendBase();
+    if (!backendBase) throw new Error("Backend non configuré.");
+
+    var res = await fetch(backendBase, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "rollbackLast",
+        phone: phone,
+        staffName: (STAFF && STAFF.name) ? STAFF.name : "",
+        staffCode: (STAFF && STAFF.code) ? STAFF.code : ""
+      })
+    });
+
+    var json = await res.json();
+    if (!json.ok) throw new Error(json.error || "Erreur rollback.");
+
+    var r = json.result;
+    if (!r || r.status === "nothing_to_rollback") {
+      alert("Rien à annuler pour ce client.");
+      return;
+    }
+
+    // Mise à jour locale depuis la réponse serveur
+    if (r.client && r.client.phone) {
+      clients[r.client.phone] = Object.assign(
+        {}, 
+        clients[r.client.phone] || {}, 
+        r.client, 
+        { dirty: false }
+      );
+
+      currentClientId = r.client.phone;
+      document.getElementById("clientIdInput").value = currentClientId;
+      openClientCard();
+    }
+
+    log("↩ Dernière action fidélité annulée", "ROLLBACK");
+  } catch (e) {
+    alert("Impossible d’annuler : " + e.message);
+  }
+}
 
   function openClientCard() {
     if (!currentClientId || !clients[currentClientId]) return;
