@@ -1964,15 +1964,16 @@ function openClientCreateModal(initialValue) {
     if (!backendBase) throw new Error("Backend non configuré.");
 
     var res = await fetch(backendBase, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "rollbackLast",
-        phone: phone,
-        staffName: (STAFF && STAFF.name) ? STAFF.name : "",
-        staffCode: (STAFF && STAFF.code) ? STAFF.code : ""
-      })
-    });
+  method: "POST",
+  headers: { "Content-Type": "text/plain" }, // 🔥 OBLIGATOIRE
+  body: JSON.stringify({
+    action: "rollbackLast",
+    phone: phone,
+    staffName: (currentStaff && currentStaff.name) ? currentStaff.name : "",
+    staffCode: (currentStaff && currentStaff.code) ? currentStaff.code : ""
+  })
+});
+
 
     var json = await res.json();
     if (!json.ok) throw new Error(json.error || "Erreur rollback.");
