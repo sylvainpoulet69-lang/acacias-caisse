@@ -3509,29 +3509,37 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
- <script>
+<script>
 (function () {
+  // On bloque le double-tap zoom uniquement sur les éléments interactifs
+  const SEL = 'button, a, .btn, [role="button"], .clickable';
+
   let lastTap = 0;
-  let moved = false;
 
-  document.addEventListener('touchstart', function () {
-    moved = false;
-  }, { passive: true });
-
-  document.addEventListener('touchmove', function () {
-    moved = true; // si on bouge, c'est un scroll
-  }, { passive: true });
-
-  document.addEventListener('touchend', function (e) {
-    if (moved) return; // ✅ laisse le scroll tranquille
-
+  function handler(e) {
     const now = Date.now();
     if (now - lastTap < 300) {
-      e.preventDefault(); // ✅ bloque uniquement double-tap
+      e.preventDefault(); // bloque le zoom double-tap
     }
     lastTap = now;
-  }, { passive: false });
+  }
 
+  function bind() {
+    document.querySelectorAll(SEL).forEach(el => {
+      // évite les doublons si re-bind
+      if (el.__noDoubleTapZoom) return;
+      el.__noDoubleTapZoom = true;
+      el.addEventListener('touchend', handler, { passive: false });
+    });
+  }
+
+  // 1) bind au chargement
+  bind();
+
+  // 2) si ton UI recrée des boutons dynamiquement, on re-bind périodiquement (léger)
+  setInterval(bind, 1500);
+
+  // sécurité supplémentaire sur certains iPad
   document.addEventListener('dblclick', function (e) {
     e.preventDefault();
   }, { passive: false });
