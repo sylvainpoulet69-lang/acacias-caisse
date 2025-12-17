@@ -3509,5 +3509,23 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
+  <script>
+(function () {
+  let lastTap = 0;
+
+  document.addEventListener('touchend', function (e) {
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      e.preventDefault(); // bloque le double-tap zoom
+    }
+    lastTap = now;
+  }, { passive: false });
+
+  // Sécurité supplémentaire (certains iPad)
+  document.addEventListener('dblclick', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+})();
+</script>
 </body>
 </html>
