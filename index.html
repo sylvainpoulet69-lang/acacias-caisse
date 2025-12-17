@@ -3511,39 +3511,36 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <script>
 (function () {
-  // On bloque le double-tap zoom uniquement sur les éléments interactifs
-  const SEL = 'button, a, .btn, [role="button"], .clickable';
+  let lastTouchTime = 0;
+  let lastX = 0, lastY = 0;
 
-  let lastTap = 0;
+  document.addEventListener('touchstart', function (e) {
+    if (!e.cancelable) return;
+    if (!e.touches || e.touches.length !== 1) return;
 
-  function handler(e) {
+    const t = e.touches[0];
     const now = Date.now();
-    if (now - lastTap < 300) {
-      e.preventDefault(); // bloque le zoom double-tap
+
+    // Distance entre 2 taps (si on a bougé, c'était un scroll)
+    const dx = Math.abs(t.clientX - lastX);
+    const dy = Math.abs(t.clientY - lastY);
+    const moved = (dx > 10 || dy > 10);
+
+    // Double tap = 2 taps proches en temps ET en position
+    if (!moved && (now - lastTouchTime) < 300) {
+      // Ne pas gêner les champs de saisie
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+      if (tag !== "input" && tag !== "textarea" && tag !== "select") {
+        e.preventDefault(); // ✅ bloque le zoom double-tap sans casser le scroll
+      }
     }
-    lastTap = now;
-  }
 
-  function bind() {
-    document.querySelectorAll(SEL).forEach(el => {
-      // évite les doublons si re-bind
-      if (el.__noDoubleTapZoom) return;
-      el.__noDoubleTapZoom = true;
-      el.addEventListener('touchend', handler, { passive: false });
-    });
-  }
-
-  // 1) bind au chargement
-  bind();
-
-  // 2) si ton UI recrée des boutons dynamiquement, on re-bind périodiquement (léger)
-  setInterval(bind, 1500);
-
-  // sécurité supplémentaire sur certains iPad
-  document.addEventListener('dblclick', function (e) {
-    e.preventDefault();
+    lastTouchTime = now;
+    lastX = t.clientX;
+    lastY = t.clientY;
   }, { passive: false });
 })();
 </script>
+
 </body>
 </html>
