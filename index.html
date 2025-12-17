@@ -3509,37 +3509,5 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
-<script>
-(function () {
-  let lastTouchTime = 0;
-  let lastX = 0, lastY = 0;
-
-  document.addEventListener('touchstart', function (e) {
-    if (!e.cancelable) return;
-    if (!e.touches || e.touches.length !== 1) return;
-
-    const t = e.touches[0];
-    const now = Date.now();
-
-    // Distance entre 2 taps (si on a bougé, c'était un scroll)
-    const dx = Math.abs(t.clientX - lastX);
-    const dy = Math.abs(t.clientY - lastY);
-    const moved = (dx > 10 || dy > 10);
-
-    // Double tap = 2 taps proches en temps ET en position
-    if (!moved && (now - lastTouchTime) < 300) {
-      // Ne pas gêner les champs de saisie
-      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
-      if (tag !== "input" && tag !== "textarea" && tag !== "select") {
-        e.preventDefault(); // ✅ bloque le zoom double-tap sans casser le scroll
-      }
-    }
-
-    lastTouchTime = now;
-    lastX = t.clientX;
-    lastY = t.clientY;
-  }, { passive: false });
-})();
-</script>
 </body>
 </html>
