@@ -984,6 +984,24 @@
       text-align: right;
       color: #047857;
     }
+
+    html, body {
+  height: 100%;
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+/* Tous les éléments interactifs */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  touch-action: manipulation;
+}
+
 </style>
 </head>
 <body>
