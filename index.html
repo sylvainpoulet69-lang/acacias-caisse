@@ -3509,19 +3509,29 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
-  <script>
+ <script>
 (function () {
   let lastTap = 0;
+  let moved = false;
+
+  document.addEventListener('touchstart', function () {
+    moved = false;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function () {
+    moved = true; // si on bouge, c'est un scroll
+  }, { passive: true });
 
   document.addEventListener('touchend', function (e) {
+    if (moved) return; // ✅ laisse le scroll tranquille
+
     const now = Date.now();
     if (now - lastTap < 300) {
-      e.preventDefault(); // bloque le double-tap zoom
+      e.preventDefault(); // ✅ bloque uniquement double-tap
     }
     lastTap = now;
   }, { passive: false });
 
-  // Sécurité supplémentaire (certains iPad)
   document.addEventListener('dblclick', function (e) {
     e.preventDefault();
   }, { passive: false });
